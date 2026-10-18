@@ -59,16 +59,37 @@ It counts keystrokes only. The text you type is never read, stored or sent anywh
   default), export or delete all data.
 - **Launch at login**, a Dock menu, keyboard shortcuts, and light, dark and tinted appearances.
 
-## Requirements
+## Install
 
-- macOS 26 (Tahoe) or later
-- Xcode 26 or later, selected with `sudo xcode-select -s /Applications/Xcode.app`. The
-  Command Line Tools alone are not enough: the icon is compiled with `actool`.
+Requires **macOS 26 (Tahoe) or later**, on Apple silicon or Intel.
 
-## Build and install
+1. Download **KeyPace-x.y.zip** from the [latest release](https://github.com/kaichn/keypace/releases/latest).
+2. Unzip it and move **KeyPace.app** to your **Applications** folder.
+3. Open it. macOS shows *"KeyPace" Not Opened*, because the app isn't notarized by Apple
+   (that needs a paid developer account). Click **Done**, then:
+   - Open System Settings → **Privacy & Security**, scroll down to the message about KeyPace,
+     click **Open Anyway** and confirm with your password.
+   - Or, in Terminal: `xattr -dr com.apple.quarantine /Applications/KeyPace.app`
+
+   You only have to do this once. Updates are signed with the same certificate, so macOS
+   keeps your permissions.
+
+To check a download, compare `shasum -a 256 KeyPace-x.y.zip` with the `.sha256` file on
+the release page.
+
+### First launch
+
+1. Click the KeyPace icon in the menu bar, then **Grant Access**.
+2. In System Settings → Privacy & Security → **Input Monitoring**, turn on KeyPace.
+3. Start typing anywhere. Tracking starts within a second, without a relaunch.
+
+## Build from source
+
+Needs Xcode 26 or later, selected with `sudo xcode-select -s /Applications/Xcode.app`. The
+Command Line Tools alone are not enough: the icon is compiled with `actool`.
 
 ```sh
-git clone https://github.com/<your-username>/keypace.git && cd keypace
+git clone https://github.com/kaichn/keypace.git && cd keypace
 ./scripts/make-signing-cert.sh   # optional, once (see below)
 ./build.sh install               # tests, builds, copies to /Applications and launches
 ```
@@ -77,14 +98,9 @@ git clone https://github.com/<your-username>/keypace.git && cd keypace
 | --- | --- |
 | `./build.sh` | Runs the tests and builds `build/KeyPace.app` |
 | `./build.sh install` | Also replaces `/Applications/KeyPace.app` and launches it |
+| `./build.sh release` | Universal build (Apple silicon + Intel), zipped as `dist/KeyPace-<version>.zip` with a SHA-256 checksum |
 | `SKIP_TESTS=1 ./build.sh` | Skips the tests |
 | `swift test` | Runs the tests only |
-
-### First launch
-
-1. Click the KeyPace icon in the menu bar, then **Grant Access**.
-2. In System Settings → Privacy & Security → **Input Monitoring**, turn on KeyPace.
-3. Start typing anywhere. Tracking starts within a second, without a relaunch.
 
 ### Signing certificate (optional)
 
@@ -162,7 +178,7 @@ scripts/
   make-signing-cert.sh  Optional local signing certificate
   make-icon-layers.py   Regenerates the icon's keycap layers
 docs/screenshots/       README images
-build.sh                Test, build, bundle, sign, install
+build.sh                Test, build, bundle, sign, install, package releases
 ```
 
 ### Build notes

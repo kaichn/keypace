@@ -2,6 +2,7 @@
 # Builds KeyPace.app with SwiftPM + Xcode's tools (actool for the icon).
 #   ./build.sh            -> build/KeyPace.app
 #   ./build.sh install    -> also copies it to /Applications and launches it
+#   ./build.sh release    -> universal (Apple silicon + Intel) build, zipped in dist/ for GitHub
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -9,11 +10,15 @@ cd "$(dirname "$0")"
 if [[ -z "${SKIP_TESTS:-}" ]]; then
   swift test --quiet
 fi
-swift build -c release
-BIN="$(swift build -c release --show-bin-path)/KeyPace"
+# Release builds contain both architectures so they run on every Mac that has macOS 26.
+SWIFT_ARGS=(-c release)
+[[ "${1:-}" == "release" ]] && SWIFT_ARGS+=(--arch arm64 --arch x86_64)
+swift build "${SWIFT_ARGS[@]}"
+BIN_DIR="$(swift build "${SWIFT_ARGS[@]}" --show-bin-path)"
+BIN="$BIN_DIR/KeyPace"
 
 # Compile the layered Liquid Glass icon (Resources/AppIcon.icon, editable in Icon Composer).
-ICON_OUT="$(swift build -c release --show-bin-path)/icon"
+ICON_OUT="$BIN_DIR/icon"
 rm -rf "$ICON_OUT"; mkdir -p "$ICON_OUT"
 xcrun actool Resources/AppIcon.icon --compile "$ICON_OUT" --platform macosx \
   --minimum-deployment-target 26.0 --app-icon AppIcon \
@@ -48,4 +53,15 @@ if [[ "${1:-}" == "install" ]]; then
   cp -R "$APP" /Applications/
   open /Applications/KeyPace.app
   echo "Installed to /Applications/KeyPace.app"
+fi
+
+if [[ "${1:-}" == "release" ]]; then
+  VERSION="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
+  mkdir -p dist
+  ZIP="dist/KeyPace-$VERSION.zip"
+  rm -f "$ZIP"
+  # ditto keeps the code signature and extended attributes intact (plain zip can break them).
+  ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
+  shasum -a 256 "$ZIP" | tee "$ZIP.sha256"
+  echo "Release archive: $ZIP ($(lipo -archs "$APP/Contents/MacOS/KeyPace"))"
 fi
