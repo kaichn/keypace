@@ -9,6 +9,38 @@ your everyday speed changes over days and months, and it compares that with your
 
 It counts keystrokes only. The text you type is never read, stored or sent anywhere.
 
+<p align="center">
+  <img src="docs/screenshots/overview.png" alt="KeyPace statistics window showing today's pace of 70 WPM against a typical range of 60 to 71 and a Monkeytype personal best of 76, with a daily pace chart" width="820">
+</p>
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/trends.png" alt="Trends: daily pace with a 7-day average line and a dot for every session"></td>
+    <td width="50%"><img src="docs/screenshots/apps.png" alt="Apps: speed, peak, accuracy, words and active time for each app"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Trends</b>: daily pace and every session</td>
+    <td align="center"><b>Apps</b>: where you type fastest</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/monkeytype.png" alt="Monkeytype comparison: personal bests next to everyday pace, and test results over time"></td>
+    <td width="50%"><img src="docs/screenshots/sessions.png" alt="Sessions table with start time, app, WPM, peak, accuracy, words and active time"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Monkeytype</b>: tests compared with real writing</td>
+    <td align="center"><b>Sessions</b>: every session, exportable as CSV</td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/screenshots/menubar.png" alt="Menu bar popover showing today's pace, peak and words typed, with Pause and Statistics buttons" width="320"><br>
+  <b>Menu bar</b>: live pace while you type
+</p>
+
+<sub>Screenshots use made-up demo data.</sub>
+
 ## Features
 
 - **Measures in the background:** a listen-only keyboard tap counts characters and
@@ -36,7 +68,7 @@ It counts keystrokes only. The text you type is never read, stored or sent anywh
 ## Build and install
 
 ```sh
-git clone <this repo> keypace && cd keypace
+git clone https://github.com/<your-username>/keypace.git && cd keypace
 ./scripts/make-signing-cert.sh   # optional, once (see below)
 ./build.sh install               # tests, builds, copies to /Applications and launches
 ```
@@ -129,6 +161,7 @@ Resources/
 scripts/
   make-signing-cert.sh  Optional local signing certificate
   make-icon-layers.py   Regenerates the icon's keycap layers
+docs/screenshots/       README images
 build.sh                Test, build, bundle, sign, install
 ```
 
