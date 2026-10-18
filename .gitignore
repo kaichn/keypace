@@ -1,0 +1,16 @@
+# SwiftPM / Xcode
+.build/
+.swiftpm/
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+Package.resolved
+
+# macOS
+.DS_Store
+
+# Local data / keys
+*.sqlite*
+*.p12
+*.pem

@@ -1,0 +1,92 @@
+{
+  "fill": {
+    "solid": "srgb:0.16078,0.36078,0.85882,1.00000"
+  },
+  "groups": [
+    {
+      "name": "Front",
+      "layers": [
+        {
+          "image-name": "keys-4.svg",
+          "name": "keys-4",
+          "opacity": 1.0,
+          "glass": true,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "image-name": "keys-3.svg",
+          "name": "keys-3",
+          "opacity": 0.82,
+          "glass": true,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.25
+      },
+      "specular": true
+    },
+    {
+      "name": "Trail",
+      "layers": [
+        {
+          "image-name": "keys-2.svg",
+          "name": "keys-2",
+          "opacity": 0.58,
+          "glass": true,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "image-name": "keys-1.svg",
+          "name": "keys-1",
+          "opacity": 0.36,
+          "glass": true,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.35
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.5
+      },
+      "specular": true
+    }
+  ],
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
+}
