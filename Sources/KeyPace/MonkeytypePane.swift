@@ -114,6 +114,10 @@ struct MonkeytypePane: View {
                     Label(err, systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                 }
+                Text("KeyPace is not affiliated with or endorsed by Monkeytype. It reads your own results through Monkeytype's public API, with the key you create. Your account is subject to Monkeytype's [Terms of Service](https://monkeytype.com/terms-of-service).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

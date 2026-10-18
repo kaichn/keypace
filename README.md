@@ -157,6 +157,17 @@ Monkeytype.
 The key is stored in your login Keychain. ApeKeys may fetch results only 30 times a day, so
 KeyPace syncs automatically at most every 6 hours (or when you click **Sync Now**).
 
+KeyPace only uses Monkeytype's published API, only reads your own account with a key you
+created, and stays within the API's rate limits. You can delete the key on monkeytype.com at
+any time. Your Monkeytype account is subject to Monkeytype's
+[Terms of Service](https://monkeytype.com/terms-of-service) and
+[Privacy Policy](https://monkeytype.com/privacy-policy).
+
+> [!NOTE]
+> KeyPace is an independent project. It is not affiliated with, endorsed by or sponsored by
+> Monkeytype. The name Monkeytype is used only to say which service KeyPace can import your
+> results from.
+
 ## Privacy
 
 - KeyPace only sees key-down events, sorts each one into *character* or *backspace*, and throws
@@ -213,3 +224,6 @@ build.sh                Test, build, bundle, sign, install, package releases
 ## License
 
 [MIT](LICENSE)
+
+KeyPace is not affiliated with Monkeytype or Apple. Monkeytype, macOS and other product names
+belong to their respective owners and are used only to describe compatibility.

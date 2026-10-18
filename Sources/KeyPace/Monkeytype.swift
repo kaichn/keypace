@@ -159,7 +159,8 @@ final class MonkeytypeSync {
     private func fetch(_ path: String, key: String) async throws -> Data {
         var request = URLRequest(url: URL(string: "https://api.monkeytype.com" + path)!)
         request.setValue("ApeKey \(key)", forHTTPHeaderField: "Authorization")
-        request.setValue("KeyPace/1.0 (macOS)", forHTTPHeaderField: "User-Agent")
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
+        request.setValue("KeyPace/\(version) (macOS; +https://github.com/kaichn/keypace)", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard status == 200 else {

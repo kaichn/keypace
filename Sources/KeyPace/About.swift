@@ -19,6 +19,7 @@ enum About {
         credits.append(link("github.com/kaichn/keypace", to: repositoryURL, base: base))
         credits.append(NSAttributedString(string: "\nReleased under the ", attributes: base))
         credits.append(link("MIT License", to: licenseURL, base: base))
+        credits.append(NSAttributedString(string: "\n\nNot affiliated with or endorsed by Monkeytype.", attributes: base))
 
         // A menu bar app must come to the front, or the panel opens behind other windows.
         NSApp.activate()
