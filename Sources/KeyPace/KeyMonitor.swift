@@ -11,7 +11,10 @@ enum KeyKind {
 /// (character vs. backspace) — the typed character itself is discarded immediately.
 @MainActor
 final class KeyMonitor {
-    var onKey: ((KeyKind, TimeInterval) -> Void)?
+    /// Key kind, monotonic time, and the process that receives the key. The receiver can
+    /// differ from the frontmost app: Spotlight and other launcher panels take keys without
+    /// becoming active.
+    var onKey: ((KeyKind, TimeInterval, pid_t) -> Void)?
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
 
@@ -40,7 +43,7 @@ final class KeyMonitor {
             return Unmanaged.passUnretained(event)
         }
         guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
+            tap: .cgAnnotatedSessionEventTap,  // annotated: the receiving process is known
             place: .tailAppendEventTap,
             options: .listenOnly,
             eventsOfInterest: mask,
@@ -68,7 +71,8 @@ final class KeyMonitor {
             return
         }
         guard type == .keyDown, let kind = Self.classify(event) else { return }
-        onKey?(kind, ProcessInfo.processInfo.systemUptime)
+        let target = pid_t(truncatingIfNeeded: event.getIntegerValueField(.eventTargetUnixProcessID))
+        onKey?(kind, ProcessInfo.processInfo.systemUptime, target)
     }
 
     nonisolated static func classify(_ event: CGEvent) -> KeyKind? {

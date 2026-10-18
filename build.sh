@@ -60,8 +60,9 @@ if [[ "${1:-}" == "release" ]]; then
   mkdir -p dist
   ZIP="dist/KeyPace-$VERSION.zip"
   rm -f "$ZIP"
-  # ditto keeps the code signature and extended attributes intact (plain zip can break them).
-  ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
+  # ditto keeps the code signature intact (plain zip can break it); --norsrc leaves out
+  # macOS file labels, which would show up as a __MACOSX folder on other systems.
+  ditto -c -k --norsrc --keepParent "$APP" "$ZIP"
   shasum -a 256 "$ZIP" | tee "$ZIP.sha256"
   echo "Release archive: $ZIP ($(lipo -archs "$APP/Contents/MacOS/KeyPace"))"
 fi

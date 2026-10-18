@@ -57,6 +57,17 @@ struct LiveSession {
         }
     }
 
+    /// Adds a short burst from the same app (e.g. one Spotlight search). Only counts and
+    /// active time are added, so the gaps between bursts never count as typing time.
+    mutating func absorb(_ other: LiveSession) {
+        chars += other.chars
+        backspaces += other.backspaces
+        activeSeconds += other.activeSeconds
+        peakWPM = max(peakWPM, other.peakWPM)
+        lastUptime = max(lastUptime, other.lastUptime)
+        burstWindow = []
+    }
+
     /// The session to save, or nil when it is too short to be meaningful.
     func finished(minChars: Int) -> TypingSession? {
         guard netChars >= minChars, activeSeconds >= Self.minimumActiveSeconds else { return nil }

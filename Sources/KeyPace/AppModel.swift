@@ -1,3 +1,4 @@
+import os
 import AppKit
 import Observation
 import ServiceManagement
@@ -33,13 +34,14 @@ final class AppModel {
         unit = Prefs.currentUnit
         paused = UserDefaults.standard.bool(forKey: Prefs.paused)
         sessions = store.all()
-        monitor.onKey = { [weak self] kind, t in self?.handle(kind, at: t) }
+        monitor.onKey = { [weak self] kind, t, pid in self?.handle(kind, at: t, target: pid) }
 
         let nc = NSWorkspace.shared.notificationCenter
         nc.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
             let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
             MainActor.assumeIsolated {
                 self?.frontApp = app
+                self?.log.info("app activated: \(app?.bundleIdentifier ?? "nil", privacy: .public)")
                 self?.finishLiveSession()  // a session never spans two apps
             }
         }
@@ -94,9 +96,31 @@ final class AppModel {
         return Set(raw.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty })
     }
 
-    private func handle(_ kind: KeyKind, at t: TimeInterval) {
+    /// Session start/finish diagnostics (app and counts only, never keys):
+    /// `log stream --predicate 'subsystem == "com.charl.keypace"' --level info`
+    @ObservationIgnored private let log = Logger(subsystem: "com.charl.keypace", category: "sessions")
+
+    /// The app that receives a key. Spotlight and launcher panels take keys without becoming
+    /// the frontmost app, so the event's target process wins over the frontmost app.
+    private func receivingApp(_ pid: pid_t) -> NSRunningApplication? {
+        if pid > 0 {
+            if let cached = appsByPID[pid], !cached.isTerminated { return cached }
+            if let app = NSRunningApplication(processIdentifier: pid), app.bundleIdentifier != nil {
+                appsByPID[pid] = app
+                return app
+            }
+        }
+        return frontApp ?? NSWorkspace.shared.frontmostApplication
+    }
+    @ObservationIgnored private var appsByPID: [pid_t: NSRunningApplication] = [:]
+
+    /// Bursts too short to save on their own (a Spotlight search, a quick reply), pooled per
+    /// app until they add up to a full session. Kept for the current day only.
+    @ObservationIgnored private var shortBursts: [String: LiveSession] = [:]
+
+    private func handle(_ kind: KeyKind, at t: TimeInterval, target: pid_t) {
         guard !paused else { return }
-        let app = frontApp ?? NSWorkspace.shared.frontmostApplication
+        let app = receivingApp(target)
         let bundleID = app?.bundleIdentifier ?? "unknown"
         if bundleID == Bundle.main.bundleIdentifier || excludedApps.contains(bundleID) { return }
 
@@ -108,6 +132,7 @@ final class AppModel {
             // A session starts with a character, not with deleting.
             guard kind == .char else { return }
             live = LiveSession(at: t, appBundleID: bundleID, appName: app?.localizedName ?? bundleID)
+            log.info("session started in \(bundleID, privacy: .public) (target pid \(target))")
         }
         live?.record(kind, at: t, pauseThreshold: defaults.double(forKey: Prefs.pauseThreshold))
     }
@@ -115,7 +140,25 @@ final class AppModel {
     func finishLiveSession() {
         guard let s = live else { return }
         live = nil
-        guard var session = s.finished(minChars: UserDefaults.standard.integer(forKey: Prefs.minChars)) else { return }
+        let minChars = UserDefaults.standard.integer(forKey: Prefs.minChars)
+        var toSave = s
+        if s.finished(minChars: minChars) == nil {
+            // Too short alone: pool it with earlier short bursts from the same app today.
+            var pooled = s
+            if var earlier = shortBursts[s.appBundleID], Calendar.current.isDateInToday(earlier.start) {
+                earlier.absorb(s)
+                pooled = earlier
+            }
+            guard pooled.finished(minChars: minChars) != nil else {
+                shortBursts[s.appBundleID] = pooled
+                log.info("short burst pooled in \(s.appBundleID, privacy: .public): \(pooled.chars) chars so far")
+                return
+            }
+            shortBursts[s.appBundleID] = nil
+            toSave = pooled
+        }
+        guard var session = toSave.finished(minChars: minChars) else { return }
+        log.info("session saved in \(s.appBundleID, privacy: .public): \(session.chars) chars")
         session.id = store.insert(session)
         sessions.append(session)
     }

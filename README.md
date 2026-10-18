@@ -128,7 +128,9 @@ My Certificates and delete it.
 | **Speed (WPM)** | Net characters ÷ 5 per active minute, the same definition Monkeytype uses. BPM = WPM × 5. |
 | **Peak burst** | The most net characters in any 10 seconds of active time. |
 | **Accuracy (est.)** | The share of keystrokes that weren't deleted again. |
-| **Session** | Continuous typing in one app. It ends when you switch apps, the Mac sleeps, or you stop typing for the idle timeout (default 20 s). Sessions under 30 net characters are not saved. |
+| **Session** | Continuous typing in one app. It ends when you switch apps, the Mac sleeps, or you stop typing for the idle timeout (default 20 s). A session needs at least 30 net characters and 5 seconds of typing. |
+| **Short bursts** | Typing too short to save on its own, like a Spotlight search or a quick reply, is pooled per app during the day and saved as one session once it adds up. Only typing time counts, never the gaps between bursts. |
+| **App** | The app that receives the keys, even when it isn't the frontmost app. Typing in Spotlight counts for Spotlight (shown as *Siri AI* on macOS versions where Siri AI draws the search panel), not for the app behind it. |
 | **Averages** | Weighted by typing time, so a 20-minute session counts more than a 20-second one. |
 
 **What counts:** letters, digits, punctuation, space and Return.<br>

@@ -122,6 +122,34 @@ struct SavingTests {
     }
 }
 
+@Suite("Short bursts")
+struct ShortBurstTests {
+    /// One Spotlight-style search: 12 characters at 5/s (11 gaps of 0.2 s = 2.2 s).
+    private func search(at t: Double) -> LiveSession {
+        var s = newSession(at: t)
+        _ = type(&s, 12, every: 0.2, from: t)
+        return s
+    }
+
+    @Test("One short search is too short to save on its own")
+    func singleSearchIsNotSaved() {
+        #expect(search(at: 0).finished(minChars: 30) == nil)
+    }
+
+    @Test("Pooled searches save once they add up, without counting the gaps between them")
+    func pooledSearchesAreSaved() {
+        var pool = search(at: 0)
+        pool.absorb(search(at: 100))      // 100 s later: the gap must not count as typing
+        #expect(pool.finished(minChars: 30) == nil)    // 24 chars, 4.4 s: still too short
+        pool.absorb(search(at: 300))
+        let saved = try! #require(pool.finished(minChars: 30))
+        #expect(saved.chars == 36)
+        #expect(abs(saved.activeSeconds - 6.6) < 0.001)
+        #expect(abs(saved.wpm - 36.0 / 5 / 6.6 * 60) < 0.001)    // same speed as each search
+        #expect(saved.end == saved.start.addingTimeInterval(302.2)) // spans first to last
+    }
+}
+
 @Suite("Aggregates and units")
 struct AggregateTests {
     private func session(chars: Int, seconds: Double) -> TypingSession {
