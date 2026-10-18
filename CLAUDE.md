@@ -59,5 +59,12 @@ public at github.com/kaichn/keypace. See README.md for features, definitions and
   kept.
 - **Keys count for the app that receives them** (the event's target process), not the frontmost
   app. Spotlight on this macOS shows up as *Siri AI* (`com.apple.campo`).
+- **Gaming pause:** Game Mode's on/off state is only on gamepolicyd's privileged XPC
+  interface, so `GameDetector` applies Game Mode's own rules instead: games categories plus
+  Apple's database in `/System/Library/AssetsV2/com_apple_MobileAsset_GamePolicy_DB1`
+  (process names there are cut to 15 characters). Ignore `com.apple.GameOverlayUI`
+  activations: that is the "Game Mode on" banner.
+- **Pause button:** keep it a plain glass `Button`. A SwiftUI `Menu` in the popover draws as a
+  pop-up control; the durations open as an `NSMenu` (`PauseMenu`).
 - **Monkeytype:** the API is read-only, so results can be imported but never uploaded.
 - **Copyright and license:** © 2026 Carl Chen, MIT License, shown in the About panel and in LICENSE.

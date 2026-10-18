@@ -43,6 +43,12 @@ struct KeyPaceApp: App {
             CommandMenu("Tracking") {
                 Toggle("Pause Tracking", isOn: $model.paused)
                     .keyboardShortcut("p", modifiers: [.command, .option])
+                Menu("Pause Tracking For") {
+                    PauseMenuItems().environment(model)
+                }
+                .disabled(model.paused)
+                Toggle("Pause While Gaming", isOn: $model.pauseWhileGaming)
+                Divider()
                 Picker("Speed Unit", selection: $model.unit) {
                     ForEach(SpeedUnit.allCases) { Text($0.label).tag($0) }
                 }
@@ -59,6 +65,8 @@ struct MenuBarLabel: View {
             Image(systemName: "keyboard.badge.exclamationmark")
         } else if model.paused {
             Image(systemName: "pause.circle")
+        } else if model.gamingApp != nil {
+            Image(systemName: "gamecontroller")
         } else if showLive, let wpm = model.liveWPM {
             Text("\(model.unit.format(wpm: wpm)) \(model.unit.label.lowercased())")
                 .monospacedDigit()

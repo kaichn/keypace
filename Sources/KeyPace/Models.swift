@@ -77,6 +77,9 @@ enum Prefs {
     static let excludedApps = "excludedApps"
     static let showLiveInMenuBar = "showLiveInMenuBar"
     static let paused = "paused"
+    /// End of a timed pause (seconds since 1970); 0 while paused until resumed.
+    static let pausedUntil = "pausedUntil"
+    static let pauseWhileGaming = "pauseWhileGaming"
 
     static func register() {
         UserDefaults.standard.register(defaults: [
@@ -86,6 +89,8 @@ enum Prefs {
             minChars: 30,
             showLiveInMenuBar: true,
             paused: false,
+            pausedUntil: 0.0,
+            pauseWhileGaming: true,
             excludedApps: [
                 "com.1password.1password", "com.agilebits.onepassword7", "com.bitwarden.desktop",
                 "com.apple.keychainaccess", "com.apple.Passwords", "org.keepassxc.keepassxc",

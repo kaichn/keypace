@@ -18,7 +18,7 @@ struct MenuBarView: View {
                 HStack {
                     Text(status).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
                     Spacer()
-                    if model.live != nil && !model.paused {
+                    if model.live != nil && !model.paused && model.gamingApp == nil {
                         Label("Live", systemImage: "circle.fill")
                             .labelStyle(.titleAndIcon)
                             .font(.subheadline.weight(.medium))
@@ -42,8 +42,9 @@ struct MenuBarView: View {
 
             GlassEffectContainer(spacing: 8) {
                 HStack(spacing: 8) {
+                    // A plain glass button: a SwiftUI Menu here would draw as a pop-up control.
                     Button {
-                        model.paused.toggle()
+                        if model.paused { model.resume() } else { PauseMenu.shared.show(for: model) }
                     } label: {
                         Label(model.paused ? "Resume" : "Pause", systemImage: model.paused ? "play.fill" : "pause.fill")
                             .frame(maxWidth: .infinity)
@@ -83,9 +84,53 @@ struct MenuBarView: View {
 
     private var status: String {
         if !model.hasPermission { return "Not measuring" }
-        if model.paused { return "Paused" }
+        if model.paused {
+            if let until = model.pausedUntil {
+                return "Paused until \(until.formatted(date: .omitted, time: .shortened))"
+            }
+            return "Paused"
+        }
+        if let game = model.gamingApp { return "Paused while you play \(game)" }
         if let live = model.live { return "Writing in \(live.appName)" }
         return model.today.sessions > 0 ? "Today's pace" : "Waiting for you to write"
+    }
+}
+
+/// Pause durations, shared by the menu bar popover and the Tracking menu.
+struct PauseMenuItems: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        Button("For 15 Minutes") { model.pause(for: 15 * 60) }
+        Button("For 1 Hour") { model.pause(for: 60 * 60) }
+        Button("For 3 Hours") { model.pause(for: 3 * 60 * 60) }
+        Divider()
+        Button("Until I Resume") { model.pause(for: nil) }
+    }
+}
+
+/// The pause durations as a native menu, opened under the pointer by the popover's Pause button.
+@MainActor
+final class PauseMenu: NSObject {
+    static let shared = PauseMenu()
+    private weak var model: AppModel?
+
+    func show(for model: AppModel) {
+        self.model = model
+        let menu = NSMenu()
+        let items: [(String, TimeInterval)] = [("For 15 Minutes", 15 * 60), ("For 1 Hour", 60 * 60), ("For 3 Hours", 3 * 60 * 60)]
+        for (title, seconds) in items {
+            let item = menu.addItem(withTitle: title, action: #selector(pause(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = seconds
+        }
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Until I Resume", action: #selector(pause(_:)), keyEquivalent: "").target = self
+        menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+    }
+
+    @objc private func pause(_ sender: NSMenuItem) {
+        model?.pause(for: sender.representedObject as? TimeInterval)
     }
 }
 

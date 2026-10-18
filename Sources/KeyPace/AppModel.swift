@@ -15,9 +15,23 @@ final class AppModel {
     var paused: Bool = UserDefaults.standard.bool(forKey: Prefs.paused) {
         didSet {
             UserDefaults.standard.set(paused, forKey: Prefs.paused)
-            if paused { finishLiveSession() }
+            if paused { finishLiveSession() } else { pausedUntil = nil }
         }
     }
+    /// When a timed pause ends. Nil while not paused, or paused until resumed.
+    private(set) var pausedUntil: Date? {
+        didSet { UserDefaults.standard.set(pausedUntil?.timeIntervalSince1970 ?? 0, forKey: Prefs.pausedUntil) }
+    }
+    /// Pause automatically while a game is in front (see GameDetector).
+    var pauseWhileGaming: Bool = true {
+        didSet {
+            UserDefaults.standard.set(pauseWhileGaming, forKey: Prefs.pauseWhileGaming)
+            updateGaming(for: frontApp)
+        }
+    }
+    /// Name of the game being played while tracking is paused for it.
+    private(set) var gamingApp: String?
+    @ObservationIgnored private var gamingPID: pid_t = 0
     var unit: SpeedUnit = Prefs.currentUnit {
         didSet { UserDefaults.standard.set(unit.rawValue, forKey: Prefs.unit) }
     }
@@ -26,6 +40,7 @@ final class AppModel {
 
     @ObservationIgnored let store = Store()
     @ObservationIgnored private let monitor = KeyMonitor()
+    @ObservationIgnored private let games = GameDetector()
     @ObservationIgnored private var timer: Timer?
     @ObservationIgnored private var frontApp: NSRunningApplication? = NSWorkspace.shared.frontmostApplication
 
@@ -33,6 +48,9 @@ final class AppModel {
         Prefs.register()
         unit = Prefs.currentUnit
         paused = UserDefaults.standard.bool(forKey: Prefs.paused)
+        let until = UserDefaults.standard.double(forKey: Prefs.pausedUntil)
+        pausedUntil = paused && until > 0 ? Date(timeIntervalSince1970: until) : nil
+        pauseWhileGaming = UserDefaults.standard.bool(forKey: Prefs.pauseWhileGaming)
         sessions = store.all()
         monitor.onKey = { [weak self] kind, t, pid in self?.handle(kind, at: t, target: pid) }
 
@@ -43,6 +61,17 @@ final class AppModel {
                 self?.frontApp = app
                 self?.log.info("app activated: \(app?.bundleIdentifier ?? "nil", privacy: .public)")
                 self?.finishLiveSession()  // a session never spans two apps
+                // The "Game Mode on" banner activates briefly; the game is still being played.
+                if app?.bundleIdentifier != "com.apple.GameOverlayUI" { self?.updateGaming(for: app) }
+            }
+        }
+        nc.addObserver(forName: NSWorkspace.didTerminateApplicationNotification, object: nil, queue: .main) { [weak self] note in
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            MainActor.assumeIsolated {
+                guard let self, let pid = app?.processIdentifier else { return }
+                self.games.forget(pid)
+                self.appsByPID[pid] = nil
+                if pid == self.gamingPID { self.updateGaming(for: nil) }
             }
         }
         for name in [NSWorkspace.willSleepNotification, NSWorkspace.screensDidSleepNotification, NSWorkspace.sessionDidResignActiveNotification] {
@@ -58,6 +87,7 @@ final class AppModel {
             MainActor.assumeIsolated { self?.tick() }
         }
         startMonitoring()
+        updateGaming(for: frontApp)
         monkeytype.autoSyncIfDue()
     }
 
@@ -82,10 +112,35 @@ final class AppModel {
         if !monitorRunning {
             startMonitoring()
         }
+        if let pausedUntil, Date() >= pausedUntil {
+            paused = false
+        }
         guard let live else { return }
         let timeout = UserDefaults.standard.double(forKey: Prefs.sessionTimeout)
         if ProcessInfo.processInfo.systemUptime - live.lastUptime > timeout {
             finishLiveSession()
+        }
+    }
+
+    // MARK: Pause
+
+    /// Pauses tracking for `duration` seconds, or until resumed when nil.
+    func pause(for duration: TimeInterval?) {
+        paused = true
+        pausedUntil = duration.map { Date().addingTimeInterval($0) }
+    }
+
+    func resume() { paused = false }
+
+    /// Starts or ends the automatic gaming pause for the app now receiving keys or in front.
+    private func updateGaming(for app: NSRunningApplication?) {
+        let game = pauseWhileGaming ? app.flatMap { games.isGame($0) ? $0 : nil } : nil
+        let name = game.map { $0.localizedName ?? $0.bundleIdentifier ?? "a game" }
+        gamingPID = game?.processIdentifier ?? 0
+        if name != gamingApp {
+            gamingApp = name
+            log.info("gaming pause \(name == nil ? "ended" : "started", privacy: .public)")
+            if name != nil { finishLiveSession() }
         }
     }
 
@@ -103,14 +158,17 @@ final class AppModel {
     /// The app that receives a key. Spotlight and launcher panels take keys without becoming
     /// the frontmost app, so the event's target process wins over the frontmost app.
     private func receivingApp(_ pid: pid_t) -> NSRunningApplication? {
-        if pid > 0 {
-            if let cached = appsByPID[pid], !cached.isTerminated { return cached }
-            if let app = NSRunningApplication(processIdentifier: pid), app.bundleIdentifier != nil {
-                appsByPID[pid] = app
-                return app
-            }
-        }
+        if let app = process(pid), app.bundleIdentifier != nil { return app }
         return frontApp ?? NSWorkspace.shared.frontmostApplication
+    }
+
+    /// The process behind a pid, with or without a bundle (games often have none).
+    private func process(_ pid: pid_t) -> NSRunningApplication? {
+        guard pid > 0 else { return nil }
+        if let cached = appsByPID[pid], !cached.isTerminated { return cached }
+        guard let app = NSRunningApplication(processIdentifier: pid) else { return nil }
+        appsByPID[pid] = app
+        return app
     }
     @ObservationIgnored private var appsByPID: [pid_t: NSRunningApplication] = [:]
 
@@ -120,6 +178,12 @@ final class AppModel {
 
     private func handle(_ kind: KeyKind, at t: TimeInterval, target: pid_t) {
         guard !paused else { return }
+        if pauseWhileGaming {
+            if let app = process(target) ?? frontApp, games.isGame(app) {
+                if app.processIdentifier != gamingPID { updateGaming(for: app) }
+                return
+            }
+        }
         let app = receivingApp(target)
         let bundleID = app?.bundleIdentifier ?? "unknown"
         if bundleID == Bundle.main.bundleIdentifier || excludedApps.contains(bundleID) { return }

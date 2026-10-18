@@ -40,6 +40,15 @@ struct SettingsView: View {
             }
 
             Section {
+                Toggle("Pause automatically while gaming", isOn: $model.pauseWhileGaming)
+            } header: {
+                Text("Gaming")
+            } footer: {
+                Text("Keys sent to games are not typing. KeyPace recognises games with the same rules as macOS Game Mode, including Steam, Epic, Minecraft and Roblox games, and pauses in windowed mode too.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
+            Section {
                 TextEditor(text: $excludedApps)
                     .font(.system(.body, design: .monospaced))
                     .frame(height: 90)
@@ -77,7 +86,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 640)
+        .frame(width: 520, height: 720)
         .onAppear {
             launchAtLogin = model.launchAtLogin
             NSApp.activate()

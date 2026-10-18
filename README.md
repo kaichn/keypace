@@ -63,8 +63,12 @@ It counts keystrokes only. The text you type is never read, stored or sent anywh
   and charts them next to your passive speed.
 - **WPM or BPM:** words per minute (5 characters = 1 word, like Monkeytype) or characters
   per minute (*Anschläge pro Minute*).
-- **Privacy controls:** pause tracking, exclude apps (password managers are excluded by
-  default), export or delete all data.
+- **Pauses while you play:** keys sent to games aren't typing, so tracking pauses on its own
+  while a game is in front. Games are recognised with the same rules as macOS Game Mode
+  (games-category apps, plus Steam, Epic, Battle.net, Minecraft, Roblox and other launcher
+  games), in full screen or in a window.
+- **Privacy controls:** pause tracking for 15 minutes, 1 hour, 3 hours or until you resume,
+  exclude apps (password managers are excluded by default), export or delete all data.
 - **Launch at login**, a Dock menu, keyboard shortcuts, and light, dark and tinted appearances.
 
 ## Install
@@ -171,6 +175,7 @@ Sources/KeyPace/
   KeyMonitor.swift      CGEventTap and key classification
   LiveSession.swift     Speed maths for the session being typed
   AppModel.swift        App state: sessions, permission, pause, app switching
+  GameDetector.swift    Recognises games with macOS Game Mode's rules
   Models.swift          TypingSession, aggregates, units, preferences
   Store.swift           SQLite storage
   Monkeytype.swift      ApeKey API client, cache and Keychain
