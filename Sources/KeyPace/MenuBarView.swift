@@ -69,8 +69,10 @@ struct MenuBarView: View {
                 Spacer()
                 Button("About") { About.show() }
                 Spacer()
-                Button("Quit KeyPace") { NSApp.terminate(nil) }
+                // Red: quitting stops tracking, unlike the other footer actions.
+                Button("Quit KeyPace", role: .destructive) { NSApp.terminate(nil) }
                     .keyboardShortcut("q")
+                    .foregroundStyle(.red)
             }
             .buttonStyle(.borderless)
             .foregroundStyle(.secondary)

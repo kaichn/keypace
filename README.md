@@ -43,7 +43,7 @@ It counts keystrokes only. The text you type is never read, stored or sent anywh
 </table>
 
 <p align="center">
-  <img src="docs/screenshots/menubar.png" alt="Menu bar popover showing today's pace, peak and words typed, with Pause and Statistics buttons" width="320"><br>
+  <img src="docs/screenshots/menubar.png" alt="Menu bar popover showing today's pace, peak and words typed, with Pause and Statistics buttons, and Settings, About and a red Quit KeyPace at the bottom" width="320"><br>
   <b>Menu bar</b>: live pace while you type
 </p>
 
