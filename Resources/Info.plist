@@ -14,6 +14,6 @@
     <key>LSMinimumSystemVersion</key><string>26.0</string>
     <key>LSUIElement</key><true/>
     <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
-    <key>NSHumanReadableCopyright</key><string>Counts keystrokes only. Never stores what you type.</string>
+    <key>NSHumanReadableCopyright</key><string>© 2026 Carl Chen</string>
 </dict>
 </plist>

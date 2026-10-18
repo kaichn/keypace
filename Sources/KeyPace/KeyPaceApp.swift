@@ -29,6 +29,9 @@ struct KeyPaceApp: App {
                 .environment(model)
         }
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About KeyPace") { About.show() }
+            }
             CommandGroup(replacing: .newItem) {
                 Button("Show Statistics") { StatsWindowController.shared.show() }
                     .keyboardShortcut("0")

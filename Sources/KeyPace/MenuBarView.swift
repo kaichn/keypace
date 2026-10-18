@@ -67,6 +67,8 @@ struct MenuBarView: View {
                     .simultaneousGesture(TapGesture().onEnded { NSApp.activate() })
                     .keyboardShortcut(",")
                 Spacer()
+                Button("About") { About.show() }
+                Spacer()
                 Button("Quit KeyPace") { NSApp.terminate(nil) }
                     .keyboardShortcut("q")
             }
