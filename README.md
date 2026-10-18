@@ -1,6 +1,14 @@
-# KeyPace
+<p align="center">
+  <img src="docs/icon.png" alt="KeyPace app icon: white keycaps on a blue background, fading from left to right" width="128">
+</p>
 
-**Your real typing speed, measured while you work.**
+<h1 align="center">KeyPace</h1>
+
+<p align="center"><b>Your real typing speed, measured while you work.</b></p>
+
+> [!NOTE]
+> This app was vibe coded: written with an AI coding assistant ([Claude Code](https://claude.com/claude-code)),
+> with me directing, testing and using it day to day.
 
 KeyPace is a native macOS menu bar app that measures how fast you type in any app (your editor,
 terminal, mail or chat) without taking typing tests. It keeps a history, so you can see how
@@ -177,7 +185,7 @@ Resources/
 scripts/
   make-signing-cert.sh  Optional local signing certificate
   make-icon-layers.py   Regenerates the icon's keycap layers
-docs/screenshots/       README images
+docs/                   README icon and screenshots
 build.sh                Test, build, bundle, sign, install, package releases
 ```
 
